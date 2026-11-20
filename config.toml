@@ -1,0 +1,46 @@
+# netids configuration. Installed to /etc/netids/config.toml.
+
+[capture]
+# Interface to sniff on. Find yours with: ip -br addr
+interface = "eth0"
+# Berkeley Packet Filter. "tcp" keeps the capture light.
+bpf_filter = "tcp"
+
+[detection]
+# Sliding window used for counting connection attempts.
+window_seconds = 60
+# Distinct destination ports from one source within the window => port scan.
+port_scan_unique_ports = 20
+# SYNs to one watched port from one source within the window => brute force.
+brute_force_attempts = 10
+# Service ports that are commonly brute-forced.
+watched_ports = [21, 22, 23, 3306, 3389]
+# SYN flood: at least this many SYNs to one destination:port in the window...
+flood_min_syns = 200
+# ...while fewer than this fraction of them see a completing ACK.
+flood_max_ack_ratio = 0.1
+# Don't re-alert on the same source and reason within this many seconds.
+alert_cooldown_seconds = 300
+# Never flag or block these. Accepts single IPs and CIDR ranges.
+# Add your admin workstation here so you can't lock yourself out.
+whitelist = ["127.0.0.1", "192.168.56.0/24"]
+
+[response]
+# false = log alerts only ("dry run"). Set to true to actually block offenders.
+enabled = false
+# How long an offending IP stays blocked. Blocks survive service restarts.
+block_seconds = 3600
+# Name of the nftables table netids manages.
+nft_table = "netids"
+
+[output]
+# One JSON object per alert, for Filebeat, Wazuh, or Splunk. Empty string disables it.
+json_alerts = "/var/log/netids/alerts.json"
+
+[metrics]
+# Prometheus endpoint. Keep it on localhost. Empty string disables it.
+listen = "127.0.0.1:9109"
+
+[logging]
+file = "/var/log/netids/alerts.log"
+level = "INFO"
