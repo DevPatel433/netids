@@ -1,0 +1,31 @@
+[Unit]
+Description=netids network intrusion detector
+Documentation=file:///opt/netids/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/netids
+ExecStart=/opt/netids/venv/bin/python -m netids -c /etc/netids/config.toml run
+Restart=on-failure
+RestartSec=5
+
+# Raw sockets need CAP_NET_RAW; nftables needs CAP_NET_ADMIN.
+# Grant only those two capabilities instead of full root.
+User=root
+AmbientCapabilities=CAP_NET_RAW CAP_NET_ADMIN
+CapabilityBoundingSet=CAP_NET_RAW CAP_NET_ADMIN
+NoNewPrivileges=yes
+
+# Hardening
+ProtectSystem=strict
+ReadWritePaths=/var/log/netids
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_NETLINK AF_PACKET
+
+[Install]
+WantedBy=multi-user.target
